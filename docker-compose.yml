@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: healio-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: healio_db
+      MYSQL_USER: healio_user
+      MYSQL_PASSWORD: healio_pass
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - healio-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: healio-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - healio-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # AI Service (Django)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: healio-ai
+    restart: unless-stopped
+    environment:
+      - DJANGO_SETTINGS_MODULE=heal_io_ai.settings
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+    volumes:
+      - ./ai-service:/app
+      - ai_uploads:/app/media
+    ports:
+      - "8000:8000"
+    networks:
+      - healio-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API (Laravel)
+  api:
+    build:
+      context: ./backend-api
+      dockerfile: Dockerfile
+    container_name: healio-api
+    restart: unless-stopped
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=healio_db
+      - DB_USERNAME=healio_user
+      - DB_PASSWORD=healio_pass
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AI_SERVICE_URL=http://ai-service:8000
+      - APP_KEY=base64:YourSecretKeyHere123456789012345678901234567890
+      - APP_URL=http://localhost:8080
+    volumes:
+      - ./backend-api:/var/www/html
+      - api_storage:/var/www/html/storage
+    ports:
+      - "8080:80"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+    networks:
+      - healio-network
+
+  # Frontend (React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: healio-frontend
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080/api/v1
+      - REACT_APP_AI_SERVICE_URL=http://localhost:8000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - healio-network
+    stdin_open: true
+    tty: true
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: healio-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - api
+      - ai-service
+    networks:
+      - healio-network
+
+networks:
+  healio-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  api_storage:
+  ai_uploads:

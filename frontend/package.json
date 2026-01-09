@@ -14,7 +14,7 @@
     "framer-motion": "^10.16.16",
     "chart.js": "^4.4.1",
     "react-chartjs-2": "^5.2.0",
-    "jspdf": "^2.5.1",
+    "jspdf": "^4.0.0",
     "html2canvas": "^1.4.1",
     "react-dropzone": "^14.2.3",
     "react-icons": "^4.12.0",

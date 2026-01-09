@@ -8,6 +8,7 @@ from rest_framework import status
 from django.conf import settings
 import os
 import traceback
+import logging
 
 from .ml_service import MockMLService
 from .utils import (
@@ -17,6 +18,8 @@ from .utils import (
     preprocess_image
 )
 
+# Configure logger
+logger = logging.getLogger(__name__)
 
 # Initialize ML service
 ml_service = MockMLService()
@@ -80,7 +83,7 @@ def analyze_image(request):
         except Exception as e:
             # Heatmap generation failure shouldn't stop diagnosis
             heatmap_path = None
-            print(f"Heatmap generation failed: {str(e)}")
+            logger.error(f'Heatmap generation failed: {str(e)}', exc_info=True)
         
         # Perform ML analysis
         results = ml_service.analyze_image(image_path)
@@ -95,8 +98,7 @@ def analyze_image(request):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        print(f"Error in analyze_image: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f'Error in analyze_image: {str(e)}', exc_info=True)
         return Response({
             'error': 'Internal server error during image analysis',
             'details': str(e)
@@ -143,8 +145,7 @@ def analyze_symptoms(request):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        print(f"Error in analyze_symptoms: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f'Error in analyze_symptoms: {str(e)}', exc_info=True)
         return Response({
             'error': 'Internal server error during symptom analysis',
             'details': str(e)
@@ -213,7 +214,7 @@ def analyze_combined(request):
             heatmap_path = generate_gradcam_heatmap(image_path)
         except Exception as e:
             heatmap_path = None
-            print(f"Heatmap generation failed: {str(e)}")
+            logger.error(f'Heatmap generation failed: {str(e)}', exc_info=True)
         
         # Perform combined analysis
         results = ml_service.analyze_combined(image_path, symptoms_data)
@@ -228,8 +229,7 @@ def analyze_combined(request):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        print(f"Error in analyze_combined: {str(e)}")
-        print(traceback.format_exc())
+        logger.error(f'Error in analyze_combined: {str(e)}', exc_info=True)
         return Response({
             'error': 'Internal server error during combined analysis',
             'details': str(e)

@@ -28,18 +28,32 @@ echo ""
 echo "📝 Creating environment files..."
 
 if [ ! -f "frontend/.env" ]; then
-    cp frontend/.env.example frontend/.env 2>/dev/null || echo "REACT_APP_API_URL=http://localhost:8080/api/v1" > frontend/.env
-    echo "✅ Frontend .env created"
+    if [ -f "frontend/.env.example" ]; then
+        cp frontend/.env.example frontend/.env
+        echo "✅ Frontend .env created"
+    else
+        echo "⚠️  Warning: frontend/.env.example not found, creating minimal .env"
+        echo "REACT_APP_API_URL=http://localhost:8080/api/v1" > frontend/.env
+    fi
 fi
 
 if [ ! -f "backend-api/.env" ]; then
-    cp backend-api/.env.example backend-api/.env 2>/dev/null || true
-    echo "✅ Backend API .env created"
+    if [ -f "backend-api/.env.example" ]; then
+        cp backend-api/.env.example backend-api/.env
+        echo "✅ Backend API .env created"
+    else
+        echo "⚠️  Warning: backend-api/.env.example not found, skipping"
+    fi
 fi
 
 if [ ! -f "ai-service/.env" ]; then
-    cp ai-service/.env.example ai-service/.env 2>/dev/null || echo "DEBUG=True" > ai-service/.env
-    echo "✅ AI Service .env created"
+    if [ -f "ai-service/.env.example" ]; then
+        cp ai-service/.env.example ai-service/.env
+        echo "✅ AI Service .env created"
+    else
+        echo "⚠️  Warning: ai-service/.env.example not found, creating minimal .env"
+        echo "DEBUG=True" > ai-service/.env
+    fi
 fi
 
 echo ""

@@ -236,18 +236,26 @@ const ResultsDashboard = () => {
                   <div>
                     <p className="text-sm font-semibold mb-2">Original Image</p>
                     <img
-                      src={`${process.env.REACT_APP_AI_SERVICE_URL || 'http://localhost:8000'}/media/${diagnosis.image_path}`}
+                      src={`${process.env.REACT_APP_AI_SERVICE_URL || '/api'}/media/${diagnosis.image_path}`}
                       alt="Original"
                       className="w-full rounded-lg"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        console.error('Failed to load original image');
+                      }}
                     />
                   </div>
                 )}
                 <div>
                   <p className="text-sm font-semibold mb-2">Attention Heatmap</p>
                   <img
-                    src={`${process.env.REACT_APP_AI_SERVICE_URL || 'http://localhost:8000'}/media/${diagnosis.heatmap_path}`}
+                    src={`${process.env.REACT_APP_AI_SERVICE_URL || '/api'}/media/${diagnosis.heatmap_path}`}
                     alt="Heatmap"
                     className="w-full rounded-lg"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      console.error('Failed to load heatmap');
+                    }}
                   />
                 </div>
               </div>

@@ -56,9 +56,18 @@ class MockMLService:
         }
     ]
     
-    def __init__(self):
-        """Initialize the mock ML service"""
-        random.seed()
+    def __init__(self, seed=None):
+        """
+        Initialize the mock ML service
+        
+        Args:
+            seed: Random seed for reproducible results (optional)
+        """
+        if seed is not None:
+            random.seed(seed)
+        else:
+            # Use a default seed for educational/demo purposes to ensure consistency
+            random.seed(42)
     
     def analyze_image(self, image_path: str) -> Dict:
         """
